@@ -1,12 +1,12 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-  <link rel="icon" type="image/png" href="favicon.png">
   <meta charset="UTF-8">
   <title>Karaoke La Posada - Johnas DJ</title>
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
   <script src="https://www.youtube.com/iframe_api"></script> <!-- API de YouTube -->
   <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@700&display=swap" rel="stylesheet"> <!-- Fuente moderna -->
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"> <!-- Ajuste para móviles -->
   <style>
     body {
       background: url('fondo.jpg') no-repeat center center fixed;
@@ -17,7 +17,7 @@
     /* Estilo mejorado para el título */
     h1 {
       font-family: 'Orbitron', sans-serif;
-      font-size: 4rem; /* Aumentamos el tamaño */
+      font-size: 4rem;
       text-transform: uppercase;
       letter-spacing: 5px;
       color: #fff;
@@ -25,15 +25,11 @@
       border: 3px solid #fff; /* Contorno */
       padding: 10px;
       display: inline-block;
-    }
-
-    h1:hover {
-      text-shadow: 6px 6px 15px rgba(0, 255, 255, 1), -6px -6px 15px rgba(255, 0, 255, 1);
+      text-align: center;
     }
 
     .video-container {
       display: flex;
-      flex-direction: row;
       justify-content: space-around;
       align-items: center;
       flex-wrap: wrap;
@@ -46,28 +42,20 @@
       margin: 20px;
     }
 
-    .crossfader-container {
+    .crossfader-container,
+    .auto-mix-container {
       text-align: center;
-      margin-top: 40px;
+      margin-top: 30px;
       font-size: 1.5rem; /* Texto más grande */
       font-weight: bold;
     }
 
-    /* Estilos mejorados para el crossfader */
     #crossfader {
       width: 80%;
       height: 20px;
       background: #ff0080;
       border-radius: 10px;
       cursor: pointer;
-    }
-
-    /* Estilos mejorados para el botón Auto Mix */
-    .auto-mix-container {
-      text-align: center;
-      margin-top: 30px;
-      font-size: 1.5rem; /* Texto más grande */
-      font-weight: bold;
     }
 
     #autoMix {
@@ -84,6 +72,30 @@
     #autoMix:hover {
       background: #00cc66;
     }
+
+    /* Ajustes para móviles */
+    @media (max-width: 768px) {
+      .video-container {
+        flex-direction: column; /* Asegura que los videos se mantengan organizados */
+        gap: 20px;
+      }
+
+      .video-item {
+        width: 90%; /* Hace que los videos sean más grandes en pantallas pequeñas */
+      }
+
+      h1 {
+        font-size: 3rem; /* Ajusta el tamaño del título en móviles */
+      }
+
+      #crossfader {
+        width: 90%; /* Asegura que el slider siga visible en móviles */
+      }
+
+      #autoMix {
+        font-size: 1.5rem;
+      }
+    }
   </style>
 </head>
 <body>
@@ -94,7 +106,6 @@
       <h1 class="mb-4">Karaoke El Barco 🏴‍☠️ </h1>
     </div>
 
-    <!-- Contenedor de los dos canales -->
     <div class="video-container">
       <div class="video-item">
         <h3>Canal A</h3>
@@ -111,13 +122,11 @@
       </div>
     </div>
 
-    <!-- Crossfader para controlar el sonido -->
     <div class="crossfader-container">
       <label for="crossfader"><strong>Volumen 🎚️</strong></label>
       <input type="range" id="crossfader" min="0" max="100" value="50" onchange="ajustarVolumen()">
     </div>
 
-    <!-- Botón de Auto Mix -->
     <div class="auto-mix-container">
       <label for="autoMix"><strong>Auto Mix 🔄</strong></label>
       <button id="autoMix" onclick="toggleAutoMix()">Activar</button>
@@ -201,7 +210,5 @@
       }
     }
   </script>
-
-  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 </body>
 </html>
