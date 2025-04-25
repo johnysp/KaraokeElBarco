@@ -32,14 +32,15 @@
       display: flex;
       justify-content: space-around;
       align-items: center;
-      flex-wrap: wrap;
-      gap: 40px;
+      flex-wrap: nowrap; /* Evita que los videos se apilen en móviles */
+      gap: 20px;
     }
 
     .video-item {
       width: 45%;
       text-align: center;
       margin: 20px;
+      min-width: 280px; /* Evita que los videos se colapsen a columna */
     }
 
     .crossfader-container,
@@ -74,26 +75,12 @@
     }
 
     /* Ajustes para móviles */
-    @media (max-width: 768px) {
+    @media (max-width: 600px) {
       .video-container {
-        flex-direction: column; /* Asegura que los videos se mantengan organizados */
-        gap: 20px;
+        flex-wrap: wrap; /* Mantiene alineados los videos */
       }
-
       .video-item {
-        width: 90%; /* Hace que los videos sean más grandes en pantallas pequeñas */
-      }
-
-      h1 {
-        font-size: 3rem; /* Ajusta el tamaño del título en móviles */
-      }
-
-      #crossfader {
-        width: 90%; /* Asegura que el slider siga visible en móviles */
-      }
-
-      #autoMix {
-        font-size: 1.5rem;
+        width: 48%; /* Ajusta el ancho para que se mantengan juntos */
       }
     }
   </style>
@@ -102,8 +89,7 @@
   <div class="container py-5">
     <div class="text-center">
       <img src="logo.png" alt="Logo Karaoke El Barco" class="header-logo" style="max-width: 200px; margin-bottom: 20px;">
-      <br>
-      <h1 class="mb-4">Karaoke El Barco 🏴‍☠️ </h1>
+      <h1 class="mb-4">Karaoke El Barco 🏴‍☠️</h1>
     </div>
 
     <div class="video-container">
