@@ -134,7 +134,7 @@
       const songName = document.getElementById(`song-${canal}`).value;
       const searchQuery = encodeURIComponent(songName + " karaoke");
 
-      const API_KEY = 'AIzaSyD-5j_8cukSFsCq70iUMyS694h5cNp_srw';
+      const API_KEY = 'AIzaSyDjLuXVyI6pwiYzSGBUliP-BGEJE_SF8SU';
       const url = `https://www.googleapis.com/youtube/v3/search?part=snippet&maxResults=5&q=${searchQuery}&key=${API_KEY}&type=video`;
 
       fetch(url)
