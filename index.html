@@ -128,16 +128,17 @@
       <button id="autoMix" onclick="toggleAutoMix()">Activar AutoMix</button>
     </div>
   </div>
-
+  <script src="config.js"></script>
   <script>
+    
     let playerA, playerB;
     let autoMixEnabled = false;
 
     function buscarVideo(canal) {
   const songName = document.getElementById(`song-${canal}`).value;
   const searchQuery = encodeURIComponent(songName + " karaoke");
-
-  const API_KEY = 'AIzaSyDjLuXVyI6pwiYzSGBUliP-BGEJE_SF8SU'; // 🔹 Reemplaza esto con tu API Key
+  
+  const API_KEY = YOUTUBE_API_KEY; // 🔹 Reemplaza esto con tu API Key
   const url = `https://www.googleapis.com/youtube/v3/search?part=snippet&maxResults=5&q=${searchQuery}&key=${API_KEY}&type=video`;
 
   fetch(url)
