@@ -128,7 +128,7 @@
       <button id="autoMix" onclick="toggleAutoMix()">Activar AutoMix</button>
     </div>
   </div>
- 
+  
   <script>
     
     let playerA, playerB;
@@ -138,8 +138,9 @@
   const songName = document.getElementById(`song-${canal}`).value;
   const searchQuery = encodeURIComponent(songName + " karaoke");
   
-  const API_KEY = 'AIzaSyCGTj030O54LOImcH3OHyh9WJU7profqBw'; // 🔹 Reemplaza esto con tu API Key
-  const url = `https://www.googleapis.com/youtube/v3/search?part=snippet&maxResults=5&q=${searchQuery}&key=${API_KEY}&type=video`;
+  const API_KEY = 'AIzaSyA0ENU70k6LGDea0yFb1BajkhKAV5Lrt0U' ; // 🔹 Reemplaza esto con tu API Key
+  const url = `https://www.googleapis.com/youtube/v3/search?part=snippet&maxResults=5&q=${searchQuery}&key=${API_KEY}&type=video&safeSearch=strict`;
+// Agrega "&safeSearch=strict" al final como muestra arriba
 
   fetch(url)
     .then(response => response.json())
