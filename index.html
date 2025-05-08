@@ -15,11 +15,9 @@
       color: #fff;
     }
 
-
     h1:hover {
-  text-shadow: 6px 6px 15px rgba(0, 255, 255, 1), -6px -6px 15px rgba(255, 0, 255, 1);
-}
-
+      text-shadow: 6px 6px 15px rgba(0, 255, 255, 1), -6px -6px 15px rgba(255, 0, 255, 1);
+    }
 
     h1 {
       font-family: 'Orbitron', sans-serif;
@@ -77,37 +75,24 @@
     }
 
     .luces {
-  position: fixed;
-  width: 10px;
-  height: 10px;
-  border-radius: 50%;
-  background: red;
-  box-shadow: 0 0 15px rgba(255, 0, 0, 0.8);
-  animation: girar 5s linear infinite;
-}
+      position: fixed;
+      width: 10px;
+      height: 10px;
+      border-radius: 50%;
+      background: red;
+      box-shadow: 0 0 15px rgba(255, 0, 0, 0.8);
+      animation: girar 5s linear infinite;
+    }
 
-@keyframes girar {
-  0% { transform: rotate(0deg) translateX(100px); }
-  100% { transform: rotate(360deg) translateX(100px); }
-}
+    @keyframes girar {
+      0% { transform: rotate(0deg) translateX(100px); }
+      100% { transform: rotate(360deg) translateX(100px); }
+    }
 
-#firma {
-  position: fixed;
-  bottom: 10px;
-  right: 10px;
-  color: rgba(255, 255, 255, 0.7);
-  font-family: 'Orbitron', sans-serif;
-  font-size: 12px;
-  text-shadow: 0 0 5px #00ffff, 0 0 10px #ff00ff;
-  z-index: 1000;
-  animation: brillo 2s infinite alternate;
-}
-
-@keyframes brillo {
-  from { opacity: 0.7; }
-  to { opacity: 1; text-shadow: 0 0 10px #00ffff, 0 0 20px #ff00ff; }
-}
-
+    /* Spinner para carga de búsqueda */
+    .spinner-border {
+      vertical-align: middle;
+    }
   </style>
 </head>
 <body>
@@ -148,42 +133,93 @@
   </div>
   
   <script>
-    
     let playerA, playerB;
     let autoMixEnabled = false;
-
-    function buscarVideo(canal) {
-  const songName = document.getElementById(`song-${canal}`).value;
-  const searchQuery = encodeURIComponent(songName + " karaoke");
-  
-  const API_KEY = 'AIzaSyA0ENU70k6LGDea0yFb1BajkhKAV5Lrt0U' ; // 🔹 Reemplaza esto con tu API Key
-  const url = `https://www.googleapis.com/youtube/v3/search?part=snippet&maxResults=5&q=${searchQuery}&key=${API_KEY}&type=video&safeSearch=strict`;
-// Agrega "&safeSearch=strict" al final como muestra arriba
-
-  fetch(url)
-    .then(response => response.json())
-    .then(data => {
-      if (data.items.length > 0) {
-        const randomIndex = Math.floor(Math.random() * data.items.length); // 🔹 Elige un resultado aleatorio
-        const videoId = data.items[randomIndex].id.videoId;
-        cargarVideo(canal, videoId);
-      } else {
-        alert("No se encontró el video.");
-      }
-    })
-    .catch(error => console.error("Error:", error));
-}
+    let isPlayerAFullscreen = false;
+    let isPlayerBFullscreen = false;
 
     function onYouTubeIframeAPIReady() {
-      playerA = new YT.Player('player-a', { height: '315', width: '560', events: { 'onStateChange': detectarFin } });
-      playerB = new YT.Player('player-b', { height: '315', width: '560', events: { 'onStateChange': detectarFin } });
+      playerA = new YT.Player('player-a', {
+        height: '315',
+        width: '560',
+        events: {
+          'onStateChange': detectarFin,
+          'onFullscreenChange': (e) => { isPlayerAFullscreen = e.data === 1; }
+        }
+      });
+      playerB = new YT.Player('player-b', {
+        height: '315',
+        width: '560',
+        events: {
+          'onStateChange': detectarFin,
+          'onFullscreenChange': (e) => { isPlayerBFullscreen = e.data === 1; }
+        }
+      });
+    }
+
+    function buscarVideo(canal) {
+      const songName = document.getElementById(`song-${canal}`).value.trim();
+      const button = document.querySelector(`.video-item:nth-child(${canal === 'a' ? 1 : 2}) .btn-primary`);
+      
+      if (!songName) {
+        if (autoMixEnabled) {
+          // Canciones predeterminadas si el campo está vacío en AutoMix
+          const defaultSongs = ["Despacito", "Bohemian Rhapsody", "Livin' on a Prayer", "Don't Stop Believin'"];
+          document.getElementById(`song-${canal}`).value = defaultSongs[Math.floor(Math.random() * defaultSongs.length)];
+        } else {
+          alert("Por favor, ingresa el nombre de una canción.");
+          return;
+        }
+      }
+
+      button.disabled = true;
+      button.innerHTML = '<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Buscando...';
+
+      const searchQuery = encodeURIComponent(document.getElementById(`song-${canal}`).value + " karaoke");
+      const API_KEY = 'AIzaSyD-5j_8cukSFsCq70iUMyS694h5cNp_srw';
+      const url = `https://www.googleapis.com/youtube/v3/search?part=snippet&maxResults=5&q=${searchQuery}&key=${API_KEY}&type=video`;
+
+      fetch(url)
+        .then(response => response.json())
+        .then(data => {
+          if (data.items && data.items.length > 0) {
+            const randomIndex = Math.floor(Math.random() * data.items.length);
+            const videoId = data.items[randomIndex].id.videoId;
+            cargarVideo(canal, videoId);
+          } else {
+            alert("No se encontraron resultados.");
+          }
+        })
+        .catch(error => {
+          console.error("Error:", error);
+          alert("Error al buscar. Intenta de nuevo.");
+        })
+        .finally(() => {
+          button.disabled = false;
+          button.textContent = 'Cargar';
+        });
     }
 
     function cargarVideo(canal, videoId) {
-      if (canal === 'a') {
-        playerA.loadVideoById(videoId);
-      } else {
-        playerB.loadVideoById(videoId);
+      const player = canal === 'a' ? playerA : playerB;
+      player.loadVideoById(videoId);
+
+      // Si AutoMix está activado y el otro reproductor estaba en pantalla completa
+      if (autoMixEnabled) {
+        const wasFullscreen = canal === 'a' ? isPlayerBFullscreen : isPlayerAFullscreen;
+        if (wasFullscreen) {
+          setTimeout(() => {
+            player.playVideo();
+            player.setSize(window.screen.width, window.screen.height);
+          }, 1500); // Espera 1.5 segundos para asegurar la carga
+        }
+      }
+    }
+
+    function detectarFin(event) {
+      if (autoMixEnabled && event.data === YT.PlayerState.ENDED) {
+        const nextChannel = event.target === playerA ? 'b' : 'a';
+        buscarVideo(nextChannel);
       }
     }
 
@@ -192,48 +228,35 @@
       document.getElementById("autoMix").innerText = autoMixEnabled ? "Desactivar AutoMix" : "Activar AutoMix";
     }
 
-    function detectarFin(event) {
-      if (autoMixEnabled && event.data === YT.PlayerState.ENDED) {
-        buscarVideo(event.target === playerA ? 'b' : 'a');
-      }
-    }
-
     function ajustarVolumen() {
       const volume = document.getElementById("crossfader").value;
       playerA.setVolume(100 - volume);
       playerB.setVolume(volume);
     }
 
+    // Efectos de luces (sin cambios)
     document.addEventListener("DOMContentLoaded", function () {
-  const lucesContainer = document.createElement("div");
-  lucesContainer.style.position = "fixed";
-  lucesContainer.style.width = "100%";
-  lucesContainer.style.height = "100vh";
-  lucesContainer.style.top = "0";
-  lucesContainer.style.left = "0";
-  lucesContainer.style.pointerEvents = "none";
-  lucesContainer.style.overflow = "hidden";
-  document.body.appendChild(lucesContainer);
+      const lucesContainer = document.createElement("div");
+      lucesContainer.style.position = "fixed";
+      lucesContainer.style.width = "100%";
+      lucesContainer.style.height = "100vh";
+      lucesContainer.style.top = "0";
+      lucesContainer.style.left = "0";
+      lucesContainer.style.pointerEvents = "none";
+      lucesContainer.style.overflow = "hidden";
+      document.body.appendChild(lucesContainer);
 
-  for (let i = 0; i < 15; i++) {
-    let luz = document.createElement("div");
-    luz.classList.add("luces");
-    luz.style.position = "absolute";
-    luz.style.top = `${Math.random() * 100}vh`;
-    luz.style.left = `${Math.random() * 100}vw`;
-    luz.style.animationDuration = `${Math.random() * 5 + 3}s`;
-    luz.style.backgroundColor = ["red", "blue", "green", "yellow", "purple"][Math.floor(Math.random() * 5)];
-    lucesContainer.appendChild(luz);
-  }
-
-  document.getElementById('current-year').textContent = new Date().getFullYear();
-});
-
-
+      for (let i = 0; i < 15; i++) {
+        let luz = document.createElement("div");
+        luz.classList.add("luces");
+        luz.style.position = "absolute";
+        luz.style.top = `${Math.random() * 100}vh`;
+        luz.style.left = `${Math.random() * 100}vw`;
+        luz.style.animationDuration = `${Math.random() * 5 + 3}s`;
+        luz.style.backgroundColor = ["red", "blue", "green", "yellow", "purple"][Math.floor(Math.random() * 5)];
+        lucesContainer.appendChild(luz);
+      }
+    });
   </script>
-
-<div id="firma" style="position: fixed; bottom: 10px; right: 10px; color: white; font-family: Arial; font-size: 20px; z-index: 1000;">
-    by Jonathan Garcia <span id="current-year"></span>
-  </div>
 </body>
 </html>
