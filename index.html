@@ -90,24 +90,6 @@
   0% { transform: rotate(0deg) translateX(100px); }
   100% { transform: rotate(360deg) translateX(100px); }
 }
-
-#firma {
-  position: fixed;
-  bottom: 10px;
-  right: 10px;
-  color: rgba(255, 255, 255, 0.7);
-  font-family: 'Orbitron', sans-serif;
-  font-size: 12px;
-  text-shadow: 0 0 5px #00ffff, 0 0 10px #ff00ff;
-  z-index: 1000;
-  animation: brillo 2s infinite alternate;
-}
-
-@keyframes brillo {
-  from { opacity: 0.7; }
-  to { opacity: 1; text-shadow: 0 0 10px #00ffff, 0 0 20px #ff00ff; }
-}
-
   </style>
 </head>
 <body>
@@ -156,9 +138,8 @@
   const songName = document.getElementById(`song-${canal}`).value;
   const searchQuery = encodeURIComponent(songName + " karaoke");
   
-  const API_KEY = 'AIzaSyA0ENU70k6LGDea0yFb1BajkhKAV5Lrt0U' ; // 🔹 Reemplaza esto con tu API Key
-  const url = `https://www.googleapis.com/youtube/v3/search?part=snippet&maxResults=5&q=${searchQuery}&key=${API_KEY}&type=video&safeSearch=strict`;
-// Agrega "&safeSearch=strict" al final como muestra arriba
+  const API_KEY = 'AIzaSyD-5j_8cukSFsCq70iUMyS694h5cNp_srw' ; // 🔹 Reemplaza esto con tu API Key
+  const url = `https://www.googleapis.com/youtube/v3/search?part=snippet&maxResults=5&q=${searchQuery}&key=${API_KEY}&type=video`;
 
   fetch(url)
     .then(response => response.json())
@@ -225,15 +206,9 @@
     luz.style.backgroundColor = ["red", "blue", "green", "yellow", "purple"][Math.floor(Math.random() * 5)];
     lucesContainer.appendChild(luz);
   }
-
-  document.getElementById('current-year').textContent = new Date().getFullYear();
 });
 
 
   </script>
-
-<div id="firma" style="position: fixed; bottom: 10px; right: 10px; color: white; font-family: Arial; font-size: 20px; z-index: 1000;">
-    by Jonathan Garcia <span id="current-year"></span>
-  </div>
 </body>
 </html>
