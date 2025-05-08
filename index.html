@@ -14,11 +14,9 @@
       background-size: cover;
       color: #fff;
     }
-
     h1:hover {
       text-shadow: 6px 6px 15px rgba(0, 255, 255, 1), -6px -6px 15px rgba(255, 0, 255, 1);
     }
-
     h1 {
       font-family: 'Orbitron', sans-serif;
       font-size: 4rem;
@@ -28,14 +26,12 @@
       padding: 10px;
       text-align: center;
     }
-
     .video-container {
       display: flex;
       justify-content: space-around;
       flex-wrap: wrap;
       gap: 20px;
     }
-
     .video-item {
       width: 45%;
       text-align: center;
@@ -44,14 +40,12 @@
       border-radius: 10px;
       box-shadow: 0 0 20px rgba(0, 255, 255, 0.5);
     }
-
     .crossfader-container {
       text-align: center;
       margin-top: 30px;
       font-size: 1.5rem;
       font-weight: bold;
     }
-
     #crossfader {
       width: 80%;
       height: 20px;
@@ -59,7 +53,6 @@
       border-radius: 10px;
       cursor: pointer;
     }
-
     #autoMix {
       font-size: 1.8rem;
       padding: 15px 30px;
@@ -69,11 +62,9 @@
       cursor: pointer;
       font-weight: bold;
     }
-
     #autoMix:hover {
       background: #00cc66;
     }
-
     .luces {
       position: fixed;
       width: 10px;
@@ -83,15 +74,22 @@
       box-shadow: 0 0 15px rgba(255, 0, 0, 0.8);
       animation: girar 5s linear infinite;
     }
-
     @keyframes girar {
       0% { transform: rotate(0deg) translateX(100px); }
       100% { transform: rotate(360deg) translateX(100px); }
     }
-
-    /* Spinner para carga de búsqueda */
     .spinner-border {
       vertical-align: middle;
+    }
+    /* Estilo para pantalla completa simulada */
+    .fullscreen-mode {
+      position: fixed !important;
+      top: 0 !important;
+      left: 0 !important;
+      width: 100vw !important;
+      height: 100vh !important;
+      z-index: 9999 !important;
+      background: #000;
     }
   </style>
 </head>
@@ -111,14 +109,14 @@
         <h3>Canal A</h3>
         <input type="text" id="song-a" class="form-control" placeholder="Busca canción">
         <button class="btn btn-primary mt-2" onclick="buscarVideo('a')">Cargar</button>
-        <div id="player-a"></div>
+        <div id="player-a" class="youtube-player"></div>
       </div>
 
       <div class="video-item">
         <h3>Canal B</h3>
         <input type="text" id="song-b" class="form-control" placeholder="Busca canción">
         <button class="btn btn-primary mt-2" onclick="buscarVideo('b')">Cargar</button>
-        <div id="player-b"></div>
+        <div id="player-b" class="youtube-player"></div>
       </div>
     </div>
 
@@ -157,13 +155,12 @@
       });
     }
 
-    function buscarVideo(canal) {
+    function buscarVideo(canal, maintainFullscreen = false) {
       const songName = document.getElementById(`song-${canal}`).value.trim();
       const button = document.querySelector(`.video-item:nth-child(${canal === 'a' ? 1 : 2}) .btn-primary`);
       
       if (!songName) {
         if (autoMixEnabled) {
-          // Canciones predeterminadas si el campo está vacío en AutoMix
           const defaultSongs = ["Despacito", "Bohemian Rhapsody", "Livin' on a Prayer", "Don't Stop Believin'"];
           document.getElementById(`song-${canal}`).value = defaultSongs[Math.floor(Math.random() * defaultSongs.length)];
         } else {
@@ -185,7 +182,7 @@
           if (data.items && data.items.length > 0) {
             const randomIndex = Math.floor(Math.random() * data.items.length);
             const videoId = data.items[randomIndex].id.videoId;
-            cargarVideo(canal, videoId);
+            cargarVideo(canal, videoId, maintainFullscreen);
           } else {
             alert("No se encontraron resultados.");
           }
@@ -200,26 +197,35 @@
         });
     }
 
-    function cargarVideo(canal, videoId) {
+    function cargarVideo(canal, videoId, maintainFullscreen = false) {
       const player = canal === 'a' ? playerA : playerB;
+      const otherPlayer = canal === 'a' ? playerB : playerA;
+      const playerElement = document.getElementById(`player-${canal}`);
+      
+      // Resetear el otro reproductor
+      otherPlayer.stopVideo();
+      otherPlayer.setSize('560', '315');
+      document.getElementById(`player-${canal === 'a' ? 'b' : 'a'}`).classList.remove('fullscreen-mode');
+      
+      // Cargar el nuevo video
       player.loadVideoById(videoId);
-
-      // Si AutoMix está activado y el otro reproductor estaba en pantalla completa
-      if (autoMixEnabled) {
-        const wasFullscreen = canal === 'a' ? isPlayerBFullscreen : isPlayerAFullscreen;
-        if (wasFullscreen) {
-          setTimeout(() => {
-            player.playVideo();
-            player.setSize(window.screen.width, window.screen.height);
-          }, 1500); // Espera 1.5 segundos para asegurar la carga
-        }
+      
+      if (maintainFullscreen && autoMixEnabled) {
+        setTimeout(() => {
+          player.playVideo();
+          player.setSize(window.innerWidth, window.innerHeight);
+          playerElement.classList.add('fullscreen-mode');
+          playerElement.scrollIntoView({ behavior: 'smooth' });
+        }, 1500);
       }
     }
 
     function detectarFin(event) {
       if (autoMixEnabled && event.data === YT.PlayerState.ENDED) {
-        const nextChannel = event.target === playerA ? 'b' : 'a';
-        buscarVideo(nextChannel);
+        const currentPlayer = event.target;
+        const nextChannel = currentPlayer === playerA ? 'b' : 'a';
+        const wasFullscreen = currentPlayer === playerA ? isPlayerAFullscreen : isPlayerBFullscreen;
+        buscarVideo(nextChannel, wasFullscreen);
       }
     }
 
@@ -234,7 +240,7 @@
       playerB.setVolume(volume);
     }
 
-    // Efectos de luces (sin cambios)
+    // Efectos de luces
     document.addEventListener("DOMContentLoaded", function () {
       const lucesContainer = document.createElement("div");
       lucesContainer.style.position = "fixed";
