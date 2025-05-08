@@ -1,11 +1,89 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-  <!-- (El head permanece igual que en tu versión anterior) -->
+  <link rel="icon" type="image/png" href="favicon.png">
+  <meta charset="UTF-8">
+  <title>Karaoke La Posada - Johnas DJ</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+  <script src="https://www.youtube.com/iframe_api"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@700&display=swap" rel="stylesheet">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <style>
-    /* Agrega esto al CSS existente */
+    body {
+      background: url('fondo.jpg') no-repeat center center fixed;
+      background-size: cover;
+      color: #fff;
+    }
+    h1:hover {
+      text-shadow: 6px 6px 15px rgba(0, 255, 255, 1), -6px -6px 15px rgba(255, 0, 255, 1);
+    }
+    h1 {
+      font-family: 'Orbitron', sans-serif;
+      font-size: 4rem;
+      text-transform: uppercase;
+      text-shadow: 4px 4px 10px rgba(0, 255, 255, 0.8), -4px -4px 10px rgba(255, 0, 255, 0.8);
+      border: 3px solid #fff;
+      padding: 10px;
+      text-align: center;
+    }
+    .video-container {
+      display: flex;
+      justify-content: space-around;
+      flex-wrap: wrap;
+      gap: 20px;
+    }
+    .video-item {
+      width: 45%;
+      text-align: center;
+      background: rgba(0, 0, 0, 0.7);
+      padding: 20px;
+      border-radius: 10px;
+      box-shadow: 0 0 20px rgba(0, 255, 255, 0.5);
+    }
+    .crossfader-container {
+      text-align: center;
+      margin-top: 30px;
+      font-size: 1.5rem;
+      font-weight: bold;
+    }
+    #crossfader {
+      width: 80%;
+      height: 20px;
+      background: #ff0080;
+      border-radius: 10px;
+      cursor: pointer;
+    }
+    #autoMix {
+      font-size: 1.8rem;
+      padding: 15px 30px;
+      background: #00ff80;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+      font-weight: bold;
+    }
+    #autoMix:hover {
+      background: #00cc66;
+    }
+    .luces {
+      position: fixed;
+      width: 10px;
+      height: 10px;
+      border-radius: 50%;
+      background: red;
+      box-shadow: 0 0 15px rgba(255, 0, 0, 0.8);
+      animation: girar 5s linear infinite;
+    }
+    @keyframes girar {
+      0% { transform: rotate(0deg) translateX(100px); }
+      100% { transform: rotate(360deg) translateX(100px); }
+    }
+    .spinner-border {
+      vertical-align: middle;
+    }
+    /* Estilos para pantalla completa */
     .youtube-player {
-      transition: all 0.5s ease;
+      transition: all 0.3s ease;
     }
     .fullscreen-mode {
       position: fixed !important;
@@ -22,10 +100,106 @@
   </style>
 </head>
 <body>
-  <!-- (El body permanece igual hasta el script) -->
+  <div class="container py-5">
+    <div class="text-center">
+      <img src="favicon.png" alt="Logo Karaoke La Posada" class="header-logo" style="max-width: 200px; margin-bottom: 20px;">
+      <h1 class="mb-4">Karaoke El Barco 🏴‍☠️</h1>
+    </div>
+    <div class="text-center mt-4">
+      <a href="manual.html" class="btn btn-success">📖 Ver Manual de Uso</a>
+    </div>
+    <br>
+    
+    <div class="video-container">
+      <div class="video-item">
+        <h3>Canal A</h3>
+        <input type="text" id="song-a" class="form-control" placeholder="Busca canción">
+        <button class="btn btn-primary mt-2" onclick="buscarVideo('a')">Cargar</button>
+        <div id="player-a" class="youtube-player"></div>
+      </div>
 
+      <div class="video-item">
+        <h3>Canal B</h3>
+        <input type="text" id="song-b" class="form-control" placeholder="Busca canción">
+        <button class="btn btn-primary mt-2" onclick="buscarVideo('b')">Cargar</button>
+        <div id="player-b" class="youtube-player"></div>
+      </div>
+    </div>
+
+    <div class="crossfader-container">
+      <label for="crossfader"><strong>Volumen 🎚️</strong></label>
+      <input type="range" id="crossfader" min="0" max="100" value="50" onchange="ajustarVolumen()">
+    </div>
+
+    <div class="text-center mt-3">
+      <button id="autoMix" onclick="toggleAutoMix()">Activar AutoMix</button>
+    </div>
+  </div>
+  
   <script>
-    // ... (funciones anteriores hasta cargarVideo)
+    let playerA, playerB;
+    let autoMixEnabled = false;
+
+    function onYouTubeIframeAPIReady() {
+      playerA = new YT.Player('player-a', {
+        height: '315',
+        width: '560',
+        events: {
+          'onStateChange': detectarFin,
+          'onReady': () => document.getElementById('player-a').classList.remove('fullscreen-mode')
+        }
+      });
+      playerB = new YT.Player('player-b', {
+        height: '315',
+        width: '560',
+        events: {
+          'onStateChange': detectarFin,
+          'onReady': () => document.getElementById('player-b').classList.remove('fullscreen-mode')
+        }
+      });
+    }
+
+    function buscarVideo(canal, maintainFullscreen = false) {
+      const songName = document.getElementById(`song-${canal}`).value.trim();
+      const button = document.querySelector(`.video-item:nth-child(${canal === 'a' ? 1 : 2}) .btn-primary`);
+      
+      if (!songName) {
+        if (autoMixEnabled) {
+          const defaultSongs = ["Despacito", "Bohemian Rhapsody", "Livin' on a Prayer", "Don't Stop Believin'"];
+          document.getElementById(`song-${canal}`).value = defaultSongs[Math.floor(Math.random() * defaultSongs.length)];
+        } else {
+          alert("Por favor, ingresa el nombre de una canción.");
+          return;
+        }
+      }
+
+      button.disabled = true;
+      button.innerHTML = '<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Buscando...';
+
+      const searchQuery = encodeURIComponent(document.getElementById(`song-${canal}`).value + " karaoke");
+      const API_KEY = 'AIzaSyD-5j_8cukSFsCq70iUMyS694h5cNp_srw';
+      const url = `https://www.googleapis.com/youtube/v3/search?part=snippet&maxResults=5&q=${searchQuery}&key=${API_KEY}&type=video`;
+
+      fetch(url)
+        .then(response => response.json())
+        .then(data => {
+          if (data.items && data.items.length > 0) {
+            const randomIndex = Math.floor(Math.random() * data.items.length);
+            const videoId = data.items[randomIndex].id.videoId;
+            cargarVideo(canal, videoId, maintainFullscreen);
+          } else {
+            alert("No se encontraron resultados.");
+          }
+        })
+        .catch(error => {
+          console.error("Error:", error);
+          alert("Error al buscar. Intenta de nuevo.");
+        })
+        .finally(() => {
+          button.disabled = false;
+          button.textContent = 'Cargar';
+        });
+    }
 
     function cargarVideo(canal, videoId, maintainFullscreen = false) {
       const player = canal === 'a' ? playerA : playerB;
@@ -33,16 +207,15 @@
       const playerElement = document.getElementById(`player-${canal}`);
       const otherElement = document.getElementById(`player-${canal === 'a' ? 'b' : 'a'}`);
 
-      // 1. Ocultar y resetear el reproductor inactivo
+      // Resetear el otro reproductor
       otherPlayer.stopVideo();
       otherElement.classList.add('hidden-player');
       otherPlayer.setSize('0', '0');
 
-      // 2. Preparar el reproductor activo
+      // Preparar el nuevo reproductor
       playerElement.classList.remove('hidden-player');
       player.loadVideoById(videoId);
 
-      // 3. Manejar pantalla completa
       if (maintainFullscreen && autoMixEnabled) {
         setTimeout(() => {
           player.playVideo();
@@ -68,7 +241,40 @@
       }
     }
 
-    // ... (resto del código igual)
+    function toggleAutoMix() {
+      autoMixEnabled = !autoMixEnabled;
+      document.getElementById("autoMix").innerText = autoMixEnabled ? "Desactivar AutoMix" : "Activar AutoMix";
+    }
+
+    function ajustarVolumen() {
+      const volume = document.getElementById("crossfader").value;
+      playerA.setVolume(100 - volume);
+      playerB.setVolume(volume);
+    }
+
+    // Efectos de luces
+    document.addEventListener("DOMContentLoaded", function () {
+      const lucesContainer = document.createElement("div");
+      lucesContainer.style.position = "fixed";
+      lucesContainer.style.width = "100%";
+      lucesContainer.style.height = "100vh";
+      lucesContainer.style.top = "0";
+      lucesContainer.style.left = "0";
+      lucesContainer.style.pointerEvents = "none";
+      lucesContainer.style.overflow = "hidden";
+      document.body.appendChild(lucesContainer);
+
+      for (let i = 0; i < 15; i++) {
+        let luz = document.createElement("div");
+        luz.classList.add("luces");
+        luz.style.position = "absolute";
+        luz.style.top = `${Math.random() * 100}vh`;
+        luz.style.left = `${Math.random() * 100}vw`;
+        luz.style.animationDuration = `${Math.random() * 5 + 3}s`;
+        luz.style.backgroundColor = ["red", "blue", "green", "yellow", "purple"][Math.floor(Math.random() * 5)];
+        lucesContainer.appendChild(luz);
+      }
+    });
   </script>
 </body>
 </html>
