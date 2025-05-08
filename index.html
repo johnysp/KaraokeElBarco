@@ -81,11 +81,11 @@
     .spinner-border {
       vertical-align: middle;
     }
-    /* Estilos para pantalla completa */
+    /* Estilos para control de pantalla completa */
     .youtube-player {
       transition: all 0.3s ease;
     }
-    .fullscreen-mode {
+    .player-fullscreen {
       position: fixed !important;
       top: 0 !important;
       left: 0 !important;
@@ -94,8 +94,12 @@
       z-index: 9999 !important;
       background: #000;
     }
-    .hidden-player {
+    .player-hidden {
       display: none !important;
+    }
+    .btn-player-control {
+      margin-top: 10px;
+      display: none;
     }
   </style>
 </head>
@@ -115,6 +119,8 @@
         <h3>Canal A</h3>
         <input type="text" id="song-a" class="form-control" placeholder="Busca canción">
         <button class="btn btn-primary mt-2" onclick="buscarVideo('a')">Cargar</button>
+        <button id="fullscreen-a" class="btn btn-info btn-player-control" onclick="toggleFullscreen('a')">Pantalla Completa</button>
+        <button id="exit-fullscreen-a" class="btn btn-warning btn-player-control" onclick="exitFullscreen('a')">Salir de Pantalla Completa</button>
         <div id="player-a" class="youtube-player"></div>
       </div>
 
@@ -122,6 +128,8 @@
         <h3>Canal B</h3>
         <input type="text" id="song-b" class="form-control" placeholder="Busca canción">
         <button class="btn btn-primary mt-2" onclick="buscarVideo('b')">Cargar</button>
+        <button id="fullscreen-b" class="btn btn-info btn-player-control" onclick="toggleFullscreen('b')">Pantalla Completa</button>
+        <button id="exit-fullscreen-b" class="btn btn-warning btn-player-control" onclick="exitFullscreen('b')">Salir de Pantalla Completa</button>
         <div id="player-b" class="youtube-player"></div>
       </div>
     </div>
@@ -139,6 +147,7 @@
   <script>
     let playerA, playerB;
     let autoMixEnabled = false;
+    let currentFullscreenPlayer = null;
 
     function onYouTubeIframeAPIReady() {
       playerA = new YT.Player('player-a', {
@@ -146,7 +155,7 @@
         width: '560',
         events: {
           'onStateChange': detectarFin,
-          'onReady': () => document.getElementById('player-a').classList.remove('fullscreen-mode')
+          'onReady': () => initPlayer('a')
         }
       });
       playerB = new YT.Player('player-b', {
@@ -154,9 +163,13 @@
         width: '560',
         events: {
           'onStateChange': detectarFin,
-          'onReady': () => document.getElementById('player-b').classList.remove('fullscreen-mode')
+          'onReady': () => initPlayer('b')
         }
       });
+    }
+
+    function initPlayer(channel) {
+      document.getElementById(`fullscreen-${channel}`).style.display = 'inline-block';
     }
 
     function buscarVideo(canal, maintainFullscreen = false) {
@@ -206,26 +219,24 @@
       const otherPlayer = canal === 'a' ? playerB : playerA;
       const playerElement = document.getElementById(`player-${canal}`);
       const otherElement = document.getElementById(`player-${canal === 'a' ? 'b' : 'a'}`);
-
+      
       // Resetear el otro reproductor
       otherPlayer.stopVideo();
-      otherElement.classList.add('hidden-player');
-      otherPlayer.setSize('0', '0');
-
-      // Preparar el nuevo reproductor
-      playerElement.classList.remove('hidden-player');
+      otherElement.classList.remove('player-fullscreen');
+      otherElement.classList.add('player-hidden');
+      document.getElementById(`exit-fullscreen-${canal === 'a' ? 'b' : 'a'}`).style.display = 'none';
+      
+      // Cargar el nuevo video
       player.loadVideoById(videoId);
-
-      if (maintainFullscreen && autoMixEnabled) {
+      playerElement.classList.remove('player-hidden');
+      
+      if (maintainFullscreen) {
         setTimeout(() => {
-          player.playVideo();
-          player.setSize(window.innerWidth, window.innerHeight);
-          playerElement.classList.add('fullscreen-mode');
-          window.scrollTo(0, 0);
+          enterFullscreen(canal);
         }, 1500);
       } else {
+        playerElement.classList.remove('player-fullscreen');
         player.setSize('560', '315');
-        playerElement.classList.remove('fullscreen-mode');
       }
     }
 
@@ -233,10 +244,7 @@
       if (autoMixEnabled && event.data === YT.PlayerState.ENDED) {
         const currentPlayer = event.target;
         const nextChannel = currentPlayer === playerA ? 'b' : 'a';
-        const wasFullscreen = currentPlayer === playerA ? 
-          document.getElementById('player-a').classList.contains('fullscreen-mode') : 
-          document.getElementById('player-b').classList.contains('fullscreen-mode');
-        
+        const wasFullscreen = currentFullscreenPlayer === (currentPlayer === playerA ? 'a' : 'b');
         buscarVideo(nextChannel, wasFullscreen);
       }
     }
@@ -250,6 +258,45 @@
       const volume = document.getElementById("crossfader").value;
       playerA.setVolume(100 - volume);
       playerB.setVolume(volume);
+    }
+
+    function toggleFullscreen(channel) {
+      if (currentFullscreenPlayer === channel) {
+        exitFullscreen(channel);
+      } else {
+        enterFullscreen(channel);
+      }
+    }
+
+    function enterFullscreen(channel) {
+      const playerElement = document.getElementById(`player-${channel}`);
+      const otherChannel = channel === 'a' ? 'b' : 'a';
+      
+      // Salir de pantalla completa del otro reproductor si es necesario
+      if (currentFullscreenPlayer && currentFullscreenPlayer !== channel) {
+        exitFullscreen(currentFullscreenPlayer);
+      }
+      
+      // Configurar el reproductor seleccionado
+      playerElement.classList.add('player-fullscreen');
+      (channel === 'a' ? playerA : playerB).setSize(window.innerWidth, window.innerHeight);
+      document.getElementById(`fullscreen-${channel}`).style.display = 'none';
+      document.getElementById(`exit-fullscreen-${channel}`).style.display = 'inline-block';
+      
+      currentFullscreenPlayer = channel;
+      window.scrollTo(0, 0);
+    }
+
+    function exitFullscreen(channel) {
+      const playerElement = document.getElementById(`player-${channel}`);
+      playerElement.classList.remove('player-fullscreen');
+      (channel === 'a' ? playerA : playerB).setSize('560', '315');
+      document.getElementById(`fullscreen-${channel}`).style.display = 'inline-block';
+      document.getElementById(`exit-fullscreen-${channel}`).style.display = 'none';
+      
+      if (currentFullscreenPlayer === channel) {
+        currentFullscreenPlayer = null;
+      }
     }
 
     // Efectos de luces
