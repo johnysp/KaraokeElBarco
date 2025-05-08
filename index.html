@@ -14,9 +14,13 @@
       background-size: cover;
       color: #fff;
     }
+
+
     h1:hover {
-      text-shadow: 6px 6px 15px rgba(0, 255, 255, 1), -6px -6px 15px rgba(255, 0, 255, 1);
-    }
+  text-shadow: 6px 6px 15px rgba(0, 255, 255, 1), -6px -6px 15px rgba(255, 0, 255, 1);
+}
+
+
     h1 {
       font-family: 'Orbitron', sans-serif;
       font-size: 4rem;
@@ -26,12 +30,14 @@
       padding: 10px;
       text-align: center;
     }
+
     .video-container {
       display: flex;
       justify-content: space-around;
       flex-wrap: wrap;
       gap: 20px;
     }
+
     .video-item {
       width: 45%;
       text-align: center;
@@ -40,12 +46,14 @@
       border-radius: 10px;
       box-shadow: 0 0 20px rgba(0, 255, 255, 0.5);
     }
+
     .crossfader-container {
       text-align: center;
       margin-top: 30px;
       font-size: 1.5rem;
       font-weight: bold;
     }
+
     #crossfader {
       width: 80%;
       height: 20px;
@@ -53,6 +61,7 @@
       border-radius: 10px;
       cursor: pointer;
     }
+
     #autoMix {
       font-size: 1.8rem;
       padding: 15px 30px;
@@ -62,17 +71,55 @@
       cursor: pointer;
       font-weight: bold;
     }
+
     #autoMix:hover {
       background: #00cc66;
     }
+
+    .luces {
+  position: fixed;
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: red;
+  box-shadow: 0 0 15px rgba(255, 0, 0, 0.8);
+  animation: girar 5s linear infinite;
+}
+
+@keyframes girar {
+  0% { transform: rotate(0deg) translateX(100px); }
+  100% { transform: rotate(360deg) translateX(100px); }
+}
+
+#firma {
+  position: fixed;
+  bottom: 10px;
+  right: 10px;
+  color: rgba(255, 255, 255, 0.7);
+  font-family: 'Orbitron', sans-serif;
+  font-size: 12px;
+  text-shadow: 0 0 5px #00ffff, 0 0 10px #ff00ff;
+  z-index: 1000;
+  animation: brillo 2s infinite alternate;
+}
+
+@keyframes brillo {
+  from { opacity: 0.7; }
+  to { opacity: 1; text-shadow: 0 0 10px #00ffff, 0 0 20px #ff00ff; }
+}
+
   </style>
 </head>
 <body>
   <div class="container py-5">
     <div class="text-center">
-      <img src="favicon.png" alt="Logo Karaoke La Posada" style="max-width: 200px; margin-bottom: 20px;">
+      <img src="favicon.png" alt="Logo Karaoke La Posada" class="header-logo" style="max-width: 200px; margin-bottom: 20px;">
       <h1 class="mb-4">Karaoke El Barco 🏴‍☠️</h1>
     </div>
+    <div class="text-center mt-4">
+      <a href="manual.html" class="btn btn-success">📖 Ver Manual de Uso</a>
+    </div>
+    <br>
     
     <div class="video-container">
       <div class="video-item">
@@ -81,7 +128,7 @@
         <button class="btn btn-primary mt-2" onclick="buscarVideo('a')">Cargar</button>
         <div id="player-a"></div>
       </div>
-      
+
       <div class="video-item">
         <h3>Canal B</h3>
         <input type="text" id="song-b" class="form-control" placeholder="Busca canción">
@@ -99,30 +146,33 @@
       <button id="autoMix" onclick="toggleAutoMix()">Activar AutoMix</button>
     </div>
   </div>
-
+  
   <script>
+    
     let playerA, playerB;
     let autoMixEnabled = false;
 
     function buscarVideo(canal) {
-      const songName = document.getElementById(`song-${canal}`).value;
-      const searchQuery = encodeURIComponent(songName + " karaoke");
-      const API_KEY = 'TU_API_KEY';
-      const url = `https://www.googleapis.com/youtube/v3/search?part=snippet&maxResults=5&q=${searchQuery}&key=${API_KEY}&type=video&safeSearch=strict`;
+  const songName = document.getElementById(`song-${canal}`).value;
+  const searchQuery = encodeURIComponent(songName + " karaoke");
+  
+  const API_KEY = 'AIzaSyA0ENU70k6LGDea0yFb1BajkhKAV5Lrt0U' ; // 🔹 Reemplaza esto con tu API Key
+  const url = `https://www.googleapis.com/youtube/v3/search?part=snippet&maxResults=5&q=${searchQuery}&key=${API_KEY}&type=video&safeSearch=strict`;
+// Agrega "&safeSearch=strict" al final como muestra arriba
 
-      fetch(url)
-        .then(response => response.json())
-        .then(data => {
-          if (data.items.length > 0) {
-            const randomIndex = Math.floor(Math.random() * data.items.length);
-            const videoId = data.items[randomIndex].id.videoId;
-            cargarVideo(canal, videoId);
-          } else {
-            alert("No se encontró el video.");
-          }
-        })
-        .catch(error => console.error("Error:", error));
-    }
+  fetch(url)
+    .then(response => response.json())
+    .then(data => {
+      if (data.items.length > 0) {
+        const randomIndex = Math.floor(Math.random() * data.items.length); // 🔹 Elige un resultado aleatorio
+        const videoId = data.items[randomIndex].id.videoId;
+        cargarVideo(canal, videoId);
+      } else {
+        alert("No se encontró el video.");
+      }
+    })
+    .catch(error => console.error("Error:", error));
+}
 
     function onYouTubeIframeAPIReady() {
       playerA = new YT.Player('player-a', { height: '315', width: '560', events: { 'onStateChange': detectarFin } });
@@ -132,19 +182,14 @@
     function cargarVideo(canal, videoId) {
       if (canal === 'a') {
         playerA.loadVideoById(videoId);
-        setTimeout(() => activarPantallaCompleta(playerA), 2000);
       } else {
         playerB.loadVideoById(videoId);
-        setTimeout(() => activarPantallaCompleta(playerB), 2000);
       }
     }
 
-    function activarPantallaCompleta(player) {
-      let iframe = player.getIframe();
-      if (iframe.requestFullscreen) iframe.requestFullscreen();
-      else if (iframe.mozRequestFullScreen) iframe.mozRequestFullScreen();
-      else if (iframe.webkitRequestFullscreen) iframe.webkitRequestFullscreen();
-      else if (iframe.msRequestFullscreen) iframe.msRequestFullscreen();
+    function toggleAutoMix() {
+      autoMixEnabled = !autoMixEnabled;
+      document.getElementById("autoMix").innerText = autoMixEnabled ? "Desactivar AutoMix" : "Activar AutoMix";
     }
 
     function detectarFin(event) {
@@ -158,6 +203,37 @@
       playerA.setVolume(100 - volume);
       playerB.setVolume(volume);
     }
+
+    document.addEventListener("DOMContentLoaded", function () {
+  const lucesContainer = document.createElement("div");
+  lucesContainer.style.position = "fixed";
+  lucesContainer.style.width = "100%";
+  lucesContainer.style.height = "100vh";
+  lucesContainer.style.top = "0";
+  lucesContainer.style.left = "0";
+  lucesContainer.style.pointerEvents = "none";
+  lucesContainer.style.overflow = "hidden";
+  document.body.appendChild(lucesContainer);
+
+  for (let i = 0; i < 15; i++) {
+    let luz = document.createElement("div");
+    luz.classList.add("luces");
+    luz.style.position = "absolute";
+    luz.style.top = `${Math.random() * 100}vh`;
+    luz.style.left = `${Math.random() * 100}vw`;
+    luz.style.animationDuration = `${Math.random() * 5 + 3}s`;
+    luz.style.backgroundColor = ["red", "blue", "green", "yellow", "purple"][Math.floor(Math.random() * 5)];
+    lucesContainer.appendChild(luz);
+  }
+
+  document.getElementById('current-year').textContent = new Date().getFullYear();
+});
+
+
   </script>
+
+<div id="firma" style="position: fixed; bottom: 10px; right: 10px; color: white; font-family: Arial; font-size: 20px; z-index: 1000;">
+    by Jonathan Garcia <span id="current-year"></span>
+  </div>
 </body>
 </html>
